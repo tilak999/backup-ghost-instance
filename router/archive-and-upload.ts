@@ -1,0 +1,50 @@
+import { FastifyInstance } from "fastify"
+import { s3Client } from "../lib/s3"
+import { ArchiveService } from "../services/archive-service"
+import { logger } from "../lib/fastify"
+import { z } from "zod"
+
+const archiveAndUploadBodySchema = z.object({
+    directoryPath: z.string().min(1, "directoryPath cannot be empty"),
+    filename: z.string().min(4, "must be minimum 3 charecters").endsWith(".zip", "must end with .zip"),
+})
+
+export const archiveAndUploadRouter = (server: FastifyInstance) => {
+    server.post("/archive-and-upload", async (request, reply) => {
+        const result = archiveAndUploadBodySchema.safeParse(request.body)
+
+        if (!result.success) {
+            logger.error({ error: result.error.flatten() }, "input validation fail")
+            return reply.status(400).send({ success: false, message: result.error.issues })
+        }
+
+        if (!process.env.s3_bucket) {
+            logger.error("s3_bucket not found")
+            return reply.status(400).send({ success: false, message: "S3 bucket env variable not set" })
+        }
+
+        try {
+            const { directoryPath, filename } = result.data
+            const archiveService = new ArchiveService({
+                s3Client,
+                bucketName: process.env.s3_bucket,
+            })
+            const { contentLength } = await archiveService.archiveAndUploadDirectory(
+                directoryPath,
+                filename,
+                process.env.s3_path,
+            )
+            reply.send({
+                success: true,
+                contentLength,
+                message: "Directory archived and uploaded.",
+            })
+        } catch (error) {
+            logger.error("Error archiving and uploading:", error)
+            reply.status(500).send({
+                success: false,
+                message: "Failed to archive and upload directory.",
+            })
+        }
+    })
+}
