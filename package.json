@@ -18,6 +18,7 @@
         "archiver": "^7.0.1",
         "dotenv": "^16.5.0",
         "fastify": "^5.3.3",
+        "mysqldump": "^3.2.0",
         "zod": "^3.25.30"
     },
     "devDependencies": {

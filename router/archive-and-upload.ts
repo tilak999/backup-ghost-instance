@@ -1,8 +1,9 @@
 import { FastifyInstance } from "fastify"
 import { s3Client } from "../lib/s3"
-import { ArchiveService } from "../services/archive-service"
+import { archiveAndUploadDirectory } from "../services/archive-service"
 import { logger } from "../lib/fastify"
 import { z } from "zod"
+import { createDump } from "../services/dump-db"
 
 const archiveAndUploadBodySchema = z.object({
     directoryPath: z.string().min(1, "directoryPath cannot be empty"),
@@ -18,21 +19,12 @@ export const archiveAndUploadRouter = (server: FastifyInstance) => {
             return reply.status(400).send({ success: false, message: result.error.issues })
         }
 
-        if (!process.env.s3_bucket) {
-            logger.error("s3_bucket not found")
-            return reply.status(400).send({ success: false, message: "S3 bucket env variable not set" })
-        }
-
         try {
             const { directoryPath, filename } = result.data
-            const archiveService = new ArchiveService({
-                s3Client,
-                bucketName: process.env.s3_bucket,
-            })
-            const { contentLength } = await archiveService.archiveAndUploadDirectory(
+            await createDump(directoryPath)
+            const { contentLength } = await archiveAndUploadDirectory(
                 directoryPath,
-                filename,
-                process.env.s3_path,
+                filename
             )
             reply.send({
                 success: true,
