@@ -1,13 +1,12 @@
 import { FastifyInstance } from "fastify"
-import { s3Client } from "../lib/s3"
 import { archiveAndUploadDirectory } from "../services/archive-service"
 import { logger } from "../lib/fastify"
 import { z } from "zod"
 import { createDump } from "../services/dump-db"
 
 const archiveAndUploadBodySchema = z.object({
-    directoryPath: z.string().min(1, "directoryPath cannot be empty"),
-    filename: z.string().min(4, "must be minimum 3 charecters").endsWith(".zip", "must end with .zip"),
+    directoryPath: z.string().default(process.env.data_directory || "/data"),
+    filename: z.string().min(4, "must be minimum 3 charecters").endsWith(".zip", "must end with .zip").default("backup.zip"),
 })
 
 export const archiveAndUploadRouter = (server: FastifyInstance) => {

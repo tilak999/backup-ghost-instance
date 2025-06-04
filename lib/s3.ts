@@ -2,17 +2,17 @@ import { S3Client } from "@aws-sdk/client-s3"
 
 function createS3Client() {
     // check if all env variable are set
-    const { s3_endpoint, s3_access_key, s3_secret_key } = process.env
-    if (!s3_endpoint) throw new Error("s3_endpoint is not set")
-    if (!s3_access_key) throw new Error("s3_access_key is not set")
-    if (!s3_secret_key) throw new Error("s3_secret_key is not set")
+    const { AWS_ENDPOINTS, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY } = process.env
+    if (!AWS_ENDPOINTS) throw new Error("s3_endpoint is not set")
+    if (!AWS_ACCESS_KEY_ID) throw new Error("s3_access_key is not set")
+    if (!AWS_SECRET_ACCESS_KEY) throw new Error("s3_secret_key is not set")
 
     return new S3Client({
         region: "auto",
-        endpoint: s3_endpoint, // Replace with your MinIO endpoint
+        endpoint: AWS_ENDPOINTS, // Replace with your MinIO endpoint
         credentials: {
-            accessKeyId: s3_access_key, // Replace with your MinIO access key
-            secretAccessKey: s3_secret_key, // Replace with your MinIO secret key
+            accessKeyId: AWS_ACCESS_KEY_ID, // Replace with your MinIO access key
+            secretAccessKey: AWS_SECRET_ACCESS_KEY, // Replace with your MinIO secret key
         },
         forcePathStyle: true,
     })

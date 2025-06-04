@@ -1,39 +1,42 @@
 import mysqldump from "mysqldump"
 import path from "path"
+import { z } from "zod"
+
+const envSchema = z.object({
+    database_name: z.string().min(1, "Database name is not defined in environment variables."),
+    database__connection__host: z.string().min(1, "Database host is not defined in environment variables."),
+    database__connection__user: z.string().min(1, "Database user is not defined in environment variables."),
+    database__connection__password: z.string().min(1, "Database password is not defined in environment variables."),
+    database__connection__port: z.string().min(1, "Database port is not defined in environment variables."),
+    db_backup_filename: z.string().default("database-backup.sql")
+})
 
 function validateEnvVariables() {
-    const { db_name, db_host, db_password, db_port, db_user, db_dump_filename } = process.env
-    if (!db_name) {
-        throw new Error("Database name is not defined in environment variables.")
+    const parsed = envSchema.safeParse(process.env)
+    if (!parsed.success) {
+        throw new Error(parsed.error.errors.map(e => e.message).join("\n"))
     }
-    if (!db_host) {
-        throw new Error("Database host is not defined in environment variables.")
-    }
-    if (!db_user) {
-        throw new Error("Database user is not defined in environment variables.")
-    }
-    if (!db_password) {
-        throw new Error("Database password is not defined in environment variables.")
-    }
-    if (!db_port) {
-        throw new Error("Database port is not defined in environment variables.")
-    }
-    if (!db_dump_filename) {
-        throw new Error("Database db_dump_filename is not defined in environment variables.")
-    }
-    return { db_name, db_host, db_password, db_port, db_user, db_dump_filename }
+    return parsed.data
 }
 
 export async function createDump(directoryPath: string) {
-    const { db_name, db_host, db_password, db_port, db_user, db_dump_filename } = validateEnvVariables()
+    const {
+        database_name,
+        database__connection__host,
+        database__connection__user,
+        database__connection__password,
+        database__connection__port,
+        db_backup_filename
+    } = validateEnvVariables()
+
     return mysqldump({
         connection: {
-            host: db_host,
-            user: db_user,
-            password: db_password,
-            port: parseInt(db_port),
-            database: db_name,
+            host: database__connection__host,
+            user: database__connection__user,
+            password: database__connection__password,
+            port: parseInt(database__connection__port),
+            database: database_name,
         },
-        dumpToFile: path.join(directoryPath, db_dump_filename),
+        dumpToFile: path.join(directoryPath, db_backup_filename),
     })
 }

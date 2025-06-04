@@ -25,7 +25,7 @@ function deleteFile(path: string) {
 }
 
 async function uploadToS3(archiveName: string, archiveFilePath: string) {
-    const bucketName = process.env.s3_bucket
+    const bucketName = process.env.AWS_BUCKET
     if (!bucketName) {
         throw new Error("S3 bucket name is not defined in environment variables.")
     }
@@ -39,7 +39,7 @@ async function uploadToS3(archiveName: string, archiveFilePath: string) {
 }
 
 export async function archiveAndUploadDirectory(directoryPath: string, archiveName: string) {
-    const s3Path = process.env.s3_path
+    const s3Path = process.env.db_backup_prefix
     const archiveFilePath = path.join("/tmp", archiveName) // Use a temporary directory
     const contentLength = await archive(directoryPath, archiveFilePath)
     await uploadToS3(s3Path ? path.join(s3Path, archiveName) : archiveName, archiveFilePath)
