@@ -31,7 +31,7 @@ export const archiveAndUploadRouter = (server: FastifyInstance) => {
                 message: "Directory archived and uploaded.",
             })
         } catch (error) {
-            logger.error("Error archiving and uploading:", error)
+            logger.error(error, "Error archiving and uploading")
             reply.status(500).send({
                 success: false,
                 message: "Failed to archive and upload directory.",
