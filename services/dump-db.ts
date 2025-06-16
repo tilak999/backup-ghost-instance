@@ -3,7 +3,7 @@ import path from "path"
 import { z } from "zod"
 
 const envSchema = z.object({
-    database_name: z.string().min(1, "Database name is not defined in environment variables."),
+    db_database_name: z.string().min(1, "Database name is not defined in environment variables."),
     database__connection__host: z.string().min(1, "Database host is not defined in environment variables."),
     database__connection__user: z.string().min(1, "Database user is not defined in environment variables."),
     database__connection__password: z.string().min(1, "Database password is not defined in environment variables."),
@@ -21,7 +21,7 @@ function validateEnvVariables() {
 
 export async function createDump(directoryPath: string) {
     const {
-        database_name,
+        db_database_name,
         database__connection__host,
         database__connection__user,
         database__connection__password,
@@ -35,7 +35,7 @@ export async function createDump(directoryPath: string) {
             user: database__connection__user,
             password: database__connection__password,
             port: parseInt(database__connection__port),
-            database: database_name,
+            database: db_database_name,
         },
         dumpToFile: path.join(directoryPath, db_backup_filename),
     })
